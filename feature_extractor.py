@@ -15,6 +15,8 @@ import time
 import os
 import copy
 from tqdm import tqdm
+import logging
+import sys
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -40,9 +42,12 @@ def main():
         best_model_wts = copy.deepcopy(model.state_dict())
         best_acc = 0.0
 
+        logger.info("Start training")
         for epoch in range(num_epochs):
-            print('Epoch {}/{}'.format(epoch, num_epochs - 1))
-            print('-' * 10)
+            # print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+            # print('-' * 10)
+            logger.info('Epoch {}/{}'.format(epoch, num_epochs - 1))
+            logger.info('-' * 10)
 
             # Each epoch has a training and validation phase
             for phase in ['train', 'val']:
@@ -55,7 +60,8 @@ def main():
                 current_corrects = 0
 
                 # Here's where the training happens
-                print('Iterating through data...')
+                # print('Iterating through data...')
+                logger.info('Iterating through data...')
 
                 for inputs, labels in tqdm(dataloaders[phase]):
                     inputs = inputs.to(device)
@@ -84,8 +90,8 @@ def main():
                 epoch_loss = current_loss / dataset_sizes[phase]
                 epoch_acc = current_corrects.double() / dataset_sizes[phase]
 
-                print('{} Loss: {:.4f} Acc: {:.4f}'.format(
-                    phase, epoch_loss, epoch_acc))
+                # print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+                logger.info('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
                 # Make a copy of the model if the accuracy on the validation set has improved
                 if phase == 'val' and epoch_acc > best_acc:
@@ -95,14 +101,17 @@ def main():
             if (epoch+1) % checkpoint_period == 0:
                 output_path = os.path.join(output_dir, 'model_{}.pth'.format(epoch+1))
                 torch.save(best_model_wts, output_path)
-                print('Saved model_{}.pth'.format(epoch+1))
+                # print('Saved model_{}.pth'.format(epoch+1))
+                logger.info('Saved model_{}.pth'.format(epoch+1))
 
-            print()
+            # print()
+            logger.info()
 
         time_since = time.time() - since
-        print('Training complete in {:.0f}m {:.0f}s'.format(
-            time_since // 60, time_since % 60))
-        print('Best val Acc: {:4f}'.format(best_acc))
+        # print('Training complete in {:.0f}m {:.0f}s'.format(time_since // 60, time_since % 60))
+        # print('Best val Acc: {:4f}'.format(best_acc))
+        logger.info('Training complete in {:.0f}m {:.0f}s'.format(time_since // 60, time_since % 60))
+        logger.info('Best val Acc: {:4f}'.format(best_acc))
 
         # Now we'll load in the best model weights and return it
         model.load_state_dict(best_model_wts)
@@ -136,10 +145,26 @@ def main():
 
         fig.savefig('visualize_model.jpg')
 
-    # Make transforms and use data loaders
+    def make_logger(name, save_dir, save_filename):
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
 
-    # Will be using these values a lot, so make them variables
-    
+        ch = logging.StreamHandler(stream=sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        # formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s")
+        formatter = logging.Formatter("%(levelname)s: %(message)s")
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+
+        if save_dir:
+            fh = logging.FileHandler(os.path.join(save_dir, save_filename+".txt"), mode='w')
+            fh.setLevel(logging.DEBUG)
+            fh.setFormatter(formatter)
+            logger.addHandler(fh)
+
+        return logger
+
+    # Make transforms and use data loaders
     mean_nums = [0.485, 0.456, 0.406]
     std_nums = [0.229, 0.224, 0.225]
 
@@ -159,19 +184,20 @@ def main():
     }
 
     # Set the directory for the data
-
     data_dir = '/home/yinghui/Projects/AICCC/testing_images'
-    output_dir = '/home/yinghui/Projects/AICCC/train-resnet/models'
+    output_dir = '/home/yinghui/Projects/AICCC/resnet_CAM/models'
+
+    logger = make_logger("Resnet_CAM", output_dir,'log')
+    # logger.info("Loaded configuration file {}".format(config_file))
+    # logger.info("Running with config:\n{}".format(cfg))
 
     # Use the image folder function to create datasets.
-
     chosen_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
                                               chosen_transforms[x])
                       for x in ['train', 'val']}
 
 
     # Make iterables with the dataloaders.
-
     dataloaders = {x: torch.utils.data.DataLoader(chosen_datasets[x], batch_size=64,
                                                  shuffle=True, num_workers=2)
                   for x in ['train', 'val']}
@@ -184,25 +210,20 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # visualize some images
-
     # Going to grab some of the training data to visualize
-    
     # inputs, classes = next(iter(dataloaders['train']))
 
     # Make a grid from batch
     # out = torchvision.utils.make_grid(inputs)
-
     # imshow(out, title=[class_names[x] for x in classes])
 
     # Setting up the model
     # We need to load in pretrained and reset final fully connected
-
     res_mod = models.resnet50(pretrained=True)
     for param in res_mod.parameters():
         param.requires_grad = False
 
     # the parameters of imported models are set to requires_grad=True by default
-
     num_ftrs = res_mod.fc.in_features
     res_mod.fc = nn.Linear(num_ftrs, num_classes)
 
@@ -211,19 +232,18 @@ def main():
 
     # Here's the main change, instead of all paramters being optimized
     # Only the params of the final layers are being optmized
-    
     optimizer_ft = optim.SGD(res_mod.fc.parameters(), lr=0.001, momentum=0.9)
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
     
     # How you can selectively unfreeze layers...
     # in order to selectively unfreeze layers, need to specify the layers that require grad
-    
     for param in res_mod.parameters():
        param.requires_grad = False
 
     for name, child in res_mod.named_children():
        if name in ['layer3', 'layer4']:
-           print(name + ' has been unfrozen.')
+           # print(name + ' has been unfrozen.')
+           logger.info(name + ' has been unfrozen.')
            for param in child.parameters():
                param.requires_grad = True
        else:
@@ -232,7 +252,6 @@ def main():
 
     # also need to update optimization function
     # only optimize those that require grad
-    
     optimizer_conv = torch.optim.SGD(filter(lambda x: x.requires_grad, res_mod.parameters()), lr=0.001, momentum=0.9)
 
     ## if only reset fully connected layer

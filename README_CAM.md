@@ -11,7 +11,7 @@ the implementation of Class Activation Mapping(CAM), Grad-CAM and Grad-CAM++ wit
 
 ## How to use
 You can use the CAM, GradCAM and GradCAMpp class as a model wrapper described in `cam.py`.
-Please see `cam_demo.ipynb` for the detail.
+Please see `cam_demo.py` for the detail.
 
 ## References
 * Learning Deep Features for Discriminative Localization, 

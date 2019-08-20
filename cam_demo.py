@@ -12,7 +12,7 @@ from visualize import visualize, reverse_normalize
 
 image = Image.open('/home/yinghui/Projects/AICCC/testing_images/train_all/MiddleFinger/915717.jpg')
 train_data_dir = '/home/yinghui/Projects/AICCC/testing_images/train'
-model_dir = '/home/yinghui/Projects/AICCC/train-resnet/models/model_2.pth'
+model_dir = '/home/yinghui/Projects/AICCC/resnet_CAM/models/model_2.pth'
 
 # preprocessing. mean and std from ImageNet
 mean_nums = [0.485, 0.456, 0.406]

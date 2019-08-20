@@ -31,7 +31,7 @@ def visualize(img, cam):
     b, g, r = heatmap.split(1)
     heatmap = torch.cat([r, g, b])
 
-    result = heatmap + img.cpu()
+    result = (heatmap * 0.5) + img.cpu()
     result = result.div(result.max())
 
     return result
