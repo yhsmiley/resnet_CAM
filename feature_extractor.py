@@ -102,7 +102,7 @@ def main():
                 output_path = os.path.join(output_dir, 'model_{}.pth'.format(epoch))
                 torch.save(best_model_wts, output_path)
                 # print('Saved model_{}.pth'.format(epoch+1))
-                logger.info('Saved model_{}.pth'.format(epoch+1))
+                logger.info('Saved model_{}.pth'.format(epoch))
 
             # print()
             logger.info('')

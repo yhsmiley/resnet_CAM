@@ -51,9 +51,9 @@ model.eval()
 target_layer = model.layer4[2].conv3
 
 # wrapper for class activation mapping. Choose one of the following.
-# wrapped_model = CAM(model, target_layer)
+wrapped_model = CAM(model, target_layer)
 # wrapped_model = GradCAM(model, target_layer)
-wrapped_model = GradCAMpp(model, target_layer)
+# wrapped_model = GradCAMpp(model, target_layer)
 
 cam = wrapped_model(tensor)
 cam = cam.cpu()
@@ -63,6 +63,6 @@ img = reverse_normalize(tensor)
 heatmap = visualize(img, cam)
 
 # save image
-# save_image(heatmap, './img/cam.png')
+save_image(heatmap, './img/cam.png')
 # save_image(heatmap, './img/gradcam.png')
-save_image(heatmap, './img/gradcampp.png')
+# save_image(heatmap, './img/gradcampp.png')
