@@ -99,13 +99,13 @@ def main():
                     best_model_wts = copy.deepcopy(model.state_dict())
 
             if (epoch+1) % checkpoint_period == 0:
-                output_path = os.path.join(output_dir, 'model_{}.pth'.format(epoch+1))
+                output_path = os.path.join(output_dir, 'model_{}.pth'.format(epoch))
                 torch.save(best_model_wts, output_path)
                 # print('Saved model_{}.pth'.format(epoch+1))
                 logger.info('Saved model_{}.pth'.format(epoch+1))
 
             # print()
-            logger.info()
+            logger.info('')
 
         time_since = time.time() - since
         # print('Training complete in {:.0f}m {:.0f}s'.format(time_since // 60, time_since % 60))

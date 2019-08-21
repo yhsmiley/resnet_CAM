@@ -10,9 +10,9 @@ import os
 from cam import CAM, GradCAM, GradCAMpp
 from visualize import visualize, reverse_normalize
 
-image = Image.open('/home/yinghui/Projects/AICCC/testing_images/train_all/MiddleFinger/915717.jpg')
+image = Image.open('/home/yinghui/Projects/AICCC/testing_images/train_all/PalmTree/135230075.jpg')
 train_data_dir = '/home/yinghui/Projects/AICCC/testing_images/train'
-model_dir = '/home/yinghui/Projects/AICCC/resnet_CAM/models/model_2.pth'
+model_dir = '/home/yinghui/Projects/AICCC/resnet_CAM/models/less_pics/model_10.pth'
 
 # preprocessing. mean and std from ImageNet
 mean_nums = [0.485, 0.456, 0.406]
@@ -52,8 +52,8 @@ target_layer = model.layer4[2].conv3
 
 # wrapper for class activation mapping. Choose one of the following.
 # wrapped_model = CAM(model, target_layer)
-# model = GradCAM(model, target_layer)
-model = GradCAMpp(model, target_layer)
+# wrapped_model = GradCAM(model, target_layer)
+wrapped_model = GradCAMpp(model, target_layer)
 
 cam = wrapped_model(tensor)
 cam = cam.cpu()
@@ -63,4 +63,6 @@ img = reverse_normalize(tensor)
 heatmap = visualize(img, cam)
 
 # save image
-save_image(heatmap, './img/cam.png')
+# save_image(heatmap, './img/cam.png')
+# save_image(heatmap, './img/gradcam.png')
+save_image(heatmap, './img/gradcampp.png')

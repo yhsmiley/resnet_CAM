@@ -106,8 +106,8 @@ class GradCAM(CAM):
         """
         # object classification
         score = self.model(x)
-        prob = F.softmax(score)
-        max_prob, idx = torch.max(prob)
+        prob = F.softmax(score, dim=1)
+        max_prob, idx = torch.max(prob, dim=1)
         print(
             "predicted object ids {}\t probability {}".format(idx.item(), max_prob.item()))
 
@@ -166,8 +166,8 @@ class GradCAMpp(GradCAM):
 
         # object classification
         score = self.model(x)
-        prob = F.softmax(score)
-        max_prob, idx = torch.max(prob)
+        prob = F.softmax(score, dim=1)
+        max_prob, idx = torch.max(prob, dim=1)
         print(
             "predicted object ids {}\t probability {}".format(idx.item(), max_prob.item()))
 
@@ -189,7 +189,7 @@ class GradCAMpp(GradCAM):
         '''
 
         self.model.zero_grad()
-        score[0, index[1]].backward(retain_graph=True)
+        score[0, index].backward(retain_graph=True)
         activations = values.activations
         gradients = values.gradients
         n, c, _, _ = gradients.shape
@@ -203,7 +203,7 @@ class GradCAMpp(GradCAM):
             denominator != 0.0, denominator, torch.ones_like(denominator))
         alpha = numerator / (denominator + 1e-7)
 
-        relu_grad = F.relu(score[0, index[1]].exp() * gradients)
+        relu_grad = F.relu(score[0, index].exp() * gradients)
         weights = (alpha * relu_grad).view(n, c, -1).sum(-1).view(n, c, 1, 1)
 
         # shape => (1, 1, H', W')
