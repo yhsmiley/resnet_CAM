@@ -17,6 +17,7 @@ import copy
 from tqdm import tqdm
 import logging
 import sys
+from collections import OrderedDict
 
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -100,7 +101,12 @@ def main():
 
             if (epoch+1) % checkpoint_period == 0:
                 output_path = os.path.join(output_dir, 'model_{}.pth'.format(epoch))
-                torch.save(best_model_wts, output_path)
+                checkpoint = {'model': 'resnet50',
+                              'classifier': model.fc,
+                              'state_dict': model.state_dict(),
+                              'class_to_idx': model.class_to_idx
+                            }
+                torch.save(checkpoint, output_path)
                 # print('Saved model_{}.pth'.format(epoch+1))
                 logger.info('Saved model_{}.pth'.format(epoch))
 
@@ -225,7 +231,12 @@ def main():
 
     # the parameters of imported models are set to requires_grad=True by default
     num_ftrs = res_mod.fc.in_features
-    res_mod.fc = nn.Linear(num_ftrs, num_classes)
+    classifier = nn.Sequential(OrderedDict([
+        ('fc1', nn.Linear(num_ftrs, num_classes))
+    ]))
+    res_mod.fc = classifier
+
+    res_mod.class_to_idx = chosen_datasets['train'].class_to_idx
 
     res_mod = res_mod.to(device)
     criterion = nn.CrossEntropyLoss()
@@ -237,9 +248,6 @@ def main():
     
     # How you can selectively unfreeze layers...
     # in order to selectively unfreeze layers, need to specify the layers that require grad
-    for param in res_mod.parameters():
-       param.requires_grad = False
-
     for name, child in res_mod.named_children():
        if name in ['layer3', 'layer4']:
            # print(name + ' has been unfrozen.')
@@ -257,7 +265,7 @@ def main():
     ## if only reset fully connected layer
     # base_model = train_model(res_mod, criterion, optimizer_ft, exp_lr_scheduler, num_epochs=10)
     ## if selectively unfreeze layers
-    base_model = train_model(res_mod, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=10, checkpoint_period=2)
+    base_model = train_model(res_mod, criterion, optimizer_conv, exp_lr_scheduler, num_epochs=10, checkpoint_period=1)
     visualize_model(base_model)
 
 if __name__ == '__main__':
