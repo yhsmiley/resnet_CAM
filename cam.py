@@ -50,8 +50,12 @@ class CAM(object):
         score = self.model(x)
         prob = F.softmax(score, dim=1)
         max_prob, idx = torch.max(prob, dim=1)
-        print(
-            "predicted object ids {}\t probability {}".format(idx.item(), max_prob.item()))
+
+        idx_to_class = {val: key for key, val in self.model.class_to_idx.items()}
+        label = idx_to_class[idx.item()]
+
+        # print("predicted object ids {}\t probability {}".format(idx.item(), max_prob.item()))
+        print("predicted object class: {}\t probability: {}".format(label, max_prob.item()))
 
         # cam can be calculated from the weights of linear layer and activations
         weight_fc = list(
@@ -108,8 +112,12 @@ class GradCAM(CAM):
         score = self.model(x)
         prob = F.softmax(score, dim=1)
         max_prob, idx = torch.max(prob, dim=1)
-        print(
-            "predicted object ids {}\t probability {}".format(idx.item(), max_prob.item()))
+        
+        idx_to_class = {val: key for key, val in self.model.class_to_idx.items()}
+        label = idx_to_class[idx.item()]
+
+        # print("predicted object ids {}\t probability {}".format(idx.item(), max_prob.item()))
+        print("predicted object class: {}\t probability: {}".format(label, max_prob.item()))
 
         # caluculate cam of the predicted class
         cam = self.getGradCAM(self.values, score, idx.item())
@@ -168,8 +176,12 @@ class GradCAMpp(GradCAM):
         score = self.model(x)
         prob = F.softmax(score, dim=1)
         max_prob, idx = torch.max(prob, dim=1)
-        print(
-            "predicted object ids {}\t probability {}".format(idx.item(), max_prob.item()))
+        
+        idx_to_class = {val: key for key, val in self.model.class_to_idx.items()}
+        label = idx_to_class[idx.item()]
+
+        # print("predicted object ids {}\t probability {}".format(idx.item(), max_prob.item()))
+        print("predicted object class: {}\t probability: {}".format(label, max_prob.item()))
 
         # caluculate cam of the predicted class
         cam = self.getGradCAMpp(self.values, score, idx.item())
